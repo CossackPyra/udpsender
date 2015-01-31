@@ -73,8 +73,8 @@ func InitRecvTransaction(block *RecvBlock) *RecvTransaction {
 	transaction.lastTime = time.Now().UnixNano()
 	transaction.blockSize = int64(len(block.fileData))
 	transaction.num = int(block.num)
-	transaction.addr = block.addr
-	transaction.transaction = block.transaction
+	transaction.Addr = block.addr
+	transaction.Transaction = block.transaction
 	return transaction
 }
 func (service *RecvService) processRecvBlock(block *RecvBlock) {
@@ -220,7 +220,7 @@ func (service *RecvService) rerequestPackets(transaction *RecvTransaction, req [
 		panic(err)
 	}
 
-	data := append(transaction.transaction, r1...)
+	data := append(transaction.Transaction, r1...)
 
 	buffer := new(bytes.Buffer)
 	binary.Write(buffer, binary.LittleEndian, int32(1))
@@ -241,7 +241,7 @@ func (service *RecvService) rerequestPackets(transaction *RecvTransaction, req [
 
 	data = append(data, data1...)
 
-	service.sock.WriteToUDP(data, transaction.addr)
+	service.sock.WriteToUDP(data, transaction.Addr)
 }
 func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) {
 	blck := new(RecvBlock)
