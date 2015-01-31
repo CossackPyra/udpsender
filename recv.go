@@ -238,7 +238,7 @@ func (service *RecvService) loop() {
 						}
 					}
 				}
-				fmt.Printf(":%d#", len(req))
+				fmt.Printf(":%d %d#", len(req), shift)
 				if len(req) > 0 {
 					service.rerequestPackets(transaction, req)
 				}
