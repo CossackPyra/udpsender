@@ -34,15 +34,15 @@ func InitSendService(speed int64, from string, to string) (service *SendService,
 	service = new(SendService)
 	service.speed = speed
 
-	addr, err := net.ResolveUDPAddr("udp", from)
+	addr, err := net.ResolveUDPAddr("udp4", from)
 	if err != nil {
 		return nil, err
 	}
-	service.addr, err = net.ResolveUDPAddr("udp", to)
+	service.addr, err = net.ResolveUDPAddr("udp4", to)
 	if err != nil {
 		return nil, err
 	}
-	service.conn, err = net.ListenUDP("udp", addr)
+	service.conn, err = net.ListenUDP("udp4", addr)
 	if err != nil {
 		return nil, err
 	}

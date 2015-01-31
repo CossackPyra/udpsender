@@ -57,11 +57,11 @@ func InitRecvService(key string, url string, fn RecvHandleFunc) (service *RecvSe
 	service.ch = make(chan *RecvBlock, 100)
 	service.transactions = map[string]*RecvTransaction{}
 
-	addr, err := net.ResolveUDPAddr("udp", url)
+	addr, err := net.ResolveUDPAddr("udp4", url)
 	if err != nil {
 		return nil, err
 	}
-	service.sock, err = net.ListenUDP("udp", addr)
+	service.sock, err = net.ListenUDP("udp4", addr)
 	if err != nil {
 		return nil, err
 	}
