@@ -148,7 +148,7 @@ func (service *RecvService) WriteTo(transaction *RecvTransaction, w io.Writer) e
 			}
 			// w.Write(block1.fileData)
 
-			f1, err := os.Open(service.dir + hex.EncodeToString(block1.transaction) + "/" + fmt.Sprintf("%d.data", block1.id))
+			f1, err := os.Open(service.dir + "/" + hex.EncodeToString(block1.transaction) + "/" + fmt.Sprintf("%d.data", block1.id))
 			if err != nil {
 				// panic(err)
 				return err
@@ -316,8 +316,8 @@ func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) error {
 
 	if verified {
 		if service.disk {
-			os.MkdirAll(service.dir+hex.EncodeToString(blck.transaction), 0700)
-			f1, err := os.Create(service.dir + hex.EncodeToString(blck.transaction) + "/" + fmt.Sprintf("%d.data", blck.id))
+			os.MkdirAll(service.dir+"/"+hex.EncodeToString(blck.transaction), 0700)
+			f1, err := os.Create(service.dir + "/" + hex.EncodeToString(blck.transaction) + "/" + fmt.Sprintf("%d.data", blck.id))
 			if err != nil {
 				// panic(err)
 				return err
