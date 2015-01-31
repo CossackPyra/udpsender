@@ -127,7 +127,7 @@ func (service *RecvService) processRecvBlock(block *RecvBlock) {
 		// file recieved
 	}
 }
-func (service *RecvService) WriteTo(w io.Writer) error {
+func (transaction *RecvTransaction) WriteTo(w io.Writer) error {
 	for i := 1; i <= transaction.num; i++ {
 		block1, ok := transaction.blocks[i]
 		if !ok {
