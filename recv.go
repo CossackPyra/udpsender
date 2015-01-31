@@ -92,7 +92,7 @@ func (service *RecvService) processRecvBlock(block *RecvBlock) {
 	fdtime := float64(block.time1 - transaction.lastTime)
 	transaction.lastTime = block.time1
 	speed := float64(len(block.fileData)) / fdtime * float64(time.Second)
-	transaction.speed = movingExpAvg(speed, transaction.speed, fdtime, float64(time.Second))
+	transaction.Speed = movingExpAvg(speed, transaction.Speed, fdtime, float64(time.Second))
 
 	_, ok = transaction.blocks[int(block.id)]
 	if ok {
@@ -101,11 +101,11 @@ func (service *RecvService) processRecvBlock(block *RecvBlock) {
 	}
 	transaction.blocks[int(block.id)] = block
 	// fmt.Printf("got %d %d %d\n%s\n", block.id, len(transaction.blocks), transaction.num, string(block.fileData))
-	fmt.Printf("got %d %d %d %f\n", block.id, len(transaction.blocks), transaction.num, transaction.speed)
+	fmt.Printf("got %d %d %d %f\n", block.id, len(transaction.blocks), transaction.num, transaction.Speed)
 	if len(transaction.blocks) == transaction.num {
 		transaction.completed = true
 		service.fn(service, transaction)
-		// fmt.Printf("Finish RecvTransaction %f\n", transaction.speed)
+		// fmt.Printf("Finish RecvTransaction %f\n", transaction.Speed)
 		// // finish transaction
 		// // save file
 
@@ -168,7 +168,7 @@ func (service *RecvService) loop() {
 
 				fdtime := float64(time1 - transaction.lastTime)
 				transaction.lastTime = time1
-				transaction.speed = movingExpAvg(0.0, transaction.speed, fdtime, float64(time.Second))
+				transaction.Speed = movingExpAvg(0.0, transaction.Speed, fdtime, float64(time.Second))
 
 				//
 				// find last_block
@@ -186,7 +186,7 @@ func (service *RecvService) loop() {
 				// dtime  = Now - last_block.time
 				dtime := time1 - block.time1
 				// last_block + (dtime-100ms)*speed/blocksize
-				shift := last_block + int((float64(dtime)-100.0*float64(time.Millisecond))*transaction.speed/float64(transaction.blockSize))
+				shift := last_block + int((float64(dtime)-100.0*float64(time.Millisecond))*transaction.Speed/float64(transaction.blockSize))
 				// get first 100 un recieved blocks
 
 				req := []int{}
