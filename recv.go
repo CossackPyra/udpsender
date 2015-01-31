@@ -278,8 +278,9 @@ func (service *RecvService) rerequestPackets(transaction *RecvTransaction, req [
 	data = append(data, data1...)
 
 	service.sock.WriteToUDP(data, transaction.Addr)
+	return nil
 }
-func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) {
+func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) error {
 	blck := new(RecvBlock)
 	blck.transaction = buf[:16]
 	blck.addr = addr
@@ -329,5 +330,5 @@ func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) {
 	} else {
 		fmt.Println("wrong hash %#v %#v", blck.blockHash, blockHash[:])
 	}
-
+	return nil
 }
