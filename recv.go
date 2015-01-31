@@ -239,7 +239,7 @@ func (service *RecvService) loop() {
 					}
 				}
 				// fmt.Printf(":%d %d#", len(req), shift)
-				fmt.Println("@", shift, last_block, dtime/time.Millisecond, dtime, transaction.Speed, float64(transaction.blockSize))
+				fmt.Println("@", shift, last_block, dtime/int64(time.Millisecond), dtime, transaction.Speed, float64(transaction.blockSize))
 
 				if len(req) > 0 {
 					service.rerequestPackets(transaction, req)
