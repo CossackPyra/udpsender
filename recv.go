@@ -10,8 +10,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"net"
-	"os"
 	"time"
 )
 
@@ -20,6 +20,7 @@ type RecvService struct {
 	ch           chan *RecvBlock
 	transactions map[string]*RecvTransaction
 	sock         *net.UDPConn
+	fn           RecvHandleFunc
 }
 
 type RecvTransaction struct {
@@ -27,10 +28,10 @@ type RecvTransaction struct {
 	blocks      map[int]*RecvBlock
 	lastTime    int64
 	blockSize   int64
-	speed       float64
+	Speed       float64
 	completed   bool
-	addr        *net.UDPAddr
-	transaction []byte
+	Addr        *net.UDPAddr
+	Transaction []byte
 }
 
 type RecvBlock struct {
@@ -44,9 +45,12 @@ type RecvBlock struct {
 	addr             *net.UDPAddr
 }
 
-func InitRecvService(key string, url string) (service *RecvService, err error) {
+type RecvHandleFunc func(service *RecvService, transaction *RecvTransaction)
+
+func InitRecvService(key string, url string, fn RecvHandleFunc) (service *RecvService, err error) {
 	service = new(RecvService)
 	service.key = key
+	service.fn = fn
 	service.ch = make(chan *RecvBlock, 100)
 	service.transactions = map[string]*RecvTransaction{}
 
@@ -100,27 +104,39 @@ func (service *RecvService) processRecvBlock(block *RecvBlock) {
 	fmt.Printf("got %d %d %d %f\n", block.id, len(transaction.blocks), transaction.num, transaction.speed)
 	if len(transaction.blocks) == transaction.num {
 		transaction.completed = true
-		fmt.Printf("Finish RecvTransaction %f\n", transaction.speed)
-		// finish transaction
-		// save file
+		service.fn(service, transaction)
+		// fmt.Printf("Finish RecvTransaction %f\n", transaction.speed)
+		// // finish transaction
+		// // save file
 
-		f1, err := os.Create("incomming/" + stransaction + "/file.out")
-		if err != nil {
-			panic(err)
-		}
-		// defer f1.Close()
+		// f1, err := os.Create("incomming/" + stransaction + "/file.out")
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// // defer f1.Close()
 
-		for i := 1; i <= transaction.num; i++ {
-			block1, ok := transaction.blocks[i]
-			if !ok {
-				// error
-				panic(errors.New(fmt.Sprintf("Not all blocks %d", i)))
-			}
-			f1.Write(block1.fileData)
-		}
-		f1.Close()
+		// for i := 1; i <= transaction.num; i++ {
+		// 	block1, ok := transaction.blocks[i]
+		// 	if !ok {
+		// 		// error
+		// 		panic(errors.New(fmt.Sprintf("Not all blocks %d", i)))
+		// 	}
+		// 	f1.Write(block1.fileData)
+		// }
+		// f1.Close()
 		// file recieved
 	}
+}
+func (service *RecvService) WriteTo(w io.Writer) error {
+	for i := 1; i <= transaction.num; i++ {
+		block1, ok := transaction.blocks[i]
+		if !ok {
+			// error
+			return errors.New(fmt.Sprintf("Not all blocks %d", i))
+		}
+		w.Write(block1.fileData)
+	}
+	return nil
 }
 func (service *RecvService) Loop() {
 
@@ -261,13 +277,13 @@ func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) {
 	fmt.Println("processPacker:", blck.id, hex.EncodeToString(r1))
 
 	if verified {
-		os.MkdirAll("incomming/"+hex.EncodeToString(blck.transaction), 0700)
-		f1, err := os.Create("incomming/" + hex.EncodeToString(blck.transaction) + "/" + fmt.Sprintf("%d.data", blck.id))
-		if err != nil {
-			panic(err)
-		}
-		defer f1.Close()
-		f1.Write(blck.fileData)
+		// os.MkdirAll("incomming/"+hex.EncodeToString(blck.transaction), 0700)
+		// f1, err := os.Create("incomming/" + hex.EncodeToString(blck.transaction) + "/" + fmt.Sprintf("%d.data", blck.id))
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// defer f1.Close()
+		// f1.Write(blck.fileData)
 		service.ch <- blck
 	} else {
 		fmt.Println("wrong hash %#v %#v", blck.blockHash, blockHash[:])
