@@ -185,6 +185,7 @@ func (service *RecvService) Loop() error {
 	}
 }
 func (service *RecvService) loop() {
+
 	ticker := time.Tick(100 * time.Millisecond)
 	for {
 
@@ -237,7 +238,7 @@ func (service *RecvService) loop() {
 						}
 					}
 				}
-
+				fmt.Printf(":%d#", len(req))
 				if len(req) > 0 {
 					service.rerequestPackets(transaction, req)
 				}
