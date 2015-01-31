@@ -148,7 +148,7 @@ func (service *RecvService) WriteTo(transaction *RecvTransaction, w io.Writer) e
 			}
 			// w.Write(block1.fileData)
 
-			f1, err := os.Open(service.dir + hex.EncodeToString(blck.transaction) + "/" + fmt.Sprintf("%d.data", blck.id))
+			f1, err := os.Open(service.dir + hex.EncodeToString(block1.transaction) + "/" + fmt.Sprintf("%d.data", block1.id))
 			if err != nil {
 				// panic(err)
 				return err
