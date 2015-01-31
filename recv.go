@@ -138,6 +138,9 @@ func (transaction *RecvTransaction) WriteTo(w io.Writer) error {
 	}
 	return nil
 }
+func (service *RecvService) Stop() {
+	service.sock.Close()
+}
 func (service *RecvService) Loop() {
 
 	for {
