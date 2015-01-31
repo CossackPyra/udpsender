@@ -310,7 +310,7 @@ func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) error {
 	binary.Read(buffer, binary.LittleEndian, &blck.end)
 	binary.Read(buffer, binary.LittleEndian, &blck.size)
 	blck.blockHash = data2[52:72]
-	blck.size1 = len(data2[72:])
+	blck.size1 = int64(len(data2[72:]))
 	bufCopy := make([]byte, bllck.size1)
 	copy(bufCopy[:], data2[72:])
 	blck.fileData = bufCopy
