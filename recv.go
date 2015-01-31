@@ -252,7 +252,9 @@ func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) {
 	binary.Read(buffer, binary.LittleEndian, &blck.end)
 	binary.Read(buffer, binary.LittleEndian, &blck.size)
 	blck.blockHash = data2[52:72]
-	blck.fileData = data2[72:]
+	bufCopy := make([]byte, len(data2[72:]))
+	copy(bufCopy[:], data2[72:])
+	blck.fileData = bufCopy
 	blockHash := sha1.Sum(blck.fileData)
 	verified := bytes.Equal(blck.blockHash, blockHash[:])
 
