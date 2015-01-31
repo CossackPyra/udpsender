@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"time"
 )
 
@@ -21,6 +22,8 @@ type RecvService struct {
 	transactions map[string]*RecvTransaction
 	sock         *net.UDPConn
 	fn           RecvHandleFunc
+	disk         bool
+	dir          string
 }
 
 type RecvTransaction struct {
@@ -77,6 +80,10 @@ func InitRecvTransaction(block *RecvBlock) *RecvTransaction {
 	transaction.Transaction = block.transaction
 	return transaction
 }
+func (service *RecvService) EnableFileStorage(dir string) {
+	service.disk = true
+	service.dir = dir
+}
 func (service *RecvService) processRecvBlock(block *RecvBlock) {
 	stransaction := hex.EncodeToString(block.transaction)
 	transaction, ok := service.transactions[stransaction]
@@ -105,50 +112,74 @@ func (service *RecvService) processRecvBlock(block *RecvBlock) {
 	if len(transaction.blocks) == transaction.num {
 		transaction.completed = true
 		service.fn(service, transaction)
-		// fmt.Printf("Finish RecvTransaction %f\n", transaction.Speed)
-		// // finish transaction
-		// // save file
 
-		// f1, err := os.Create("incomming/" + stransaction + "/file.out")
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// // defer f1.Close()
+		// if service.disk {
 
-		// for i := 1; i <= transaction.num; i++ {
-		// 	block1, ok := transaction.blocks[i]
-		// 	if !ok {
-		// 		// error
-		// 		panic(errors.New(fmt.Sprintf("Not all blocks %d", i)))
+		// 	os.MkdirAll(service.dir+"/"+stransaction, 0700)
+
+		// 	f1, err := os.Create(service.dir + "/" + stransaction + "/file.out")
+		// 	if err != nil {
+		// 		// panic(err)
+		// 		return
 		// 	}
-		// 	f1.Write(block1.fileData)
+		// 	// defer f1.Close()
+
+		// 	for i := 1; i <= transaction.num; i++ {
+		// 		block1, ok := transaction.blocks[i]
+		// 		if !ok {
+		// 			// error
+		// 			panic(errors.New(fmt.Sprintf("Not all blocks %d", i)))
+		// 		}
+		// 		f1.Write(block1.fileData)
+		// 	}
+		// 	f1.Close()
+		// 	block1.fileData = nil
 		// }
-		// f1.Close()
-		// file recieved
+
 	}
 }
-func (transaction *RecvTransaction) WriteTo(w io.Writer) error {
-	for i := 1; i <= transaction.num; i++ {
-		block1, ok := transaction.blocks[i]
-		if !ok {
-			// error
-			return errors.New(fmt.Sprintf("Not all blocks %d", i))
+func (service *RecvService) WriteTo(transaction *RecvTransaction, w io.Writer) error {
+	if service.disk {
+		for i := 1; i <= transaction.num; i++ {
+			block1, ok := transaction.blocks[i]
+			if !ok {
+				// error
+				return errors.New(fmt.Sprintf("Not all blocks %d", i))
+			}
+			// w.Write(block1.fileData)
+
+			f1, err := os.Open(service.dir + hex.EncodeToString(blck.transaction) + "/" + fmt.Sprintf("%d.data", blck.id))
+			if err != nil {
+				// panic(err)
+				return err
+			}
+			io.Copy(w, f1)
 		}
-		w.Write(block1.fileData)
+	} else {
+		for i := 1; i <= transaction.num; i++ {
+			block1, ok := transaction.blocks[i]
+			if !ok {
+				// error
+				return errors.New(fmt.Sprintf("Not all blocks %d", i))
+			}
+			w.Write(block1.fileData)
+		}
 	}
+
 	return nil
 }
 func (service *RecvService) Stop() {
 	service.sock.Close()
 }
-func (service *RecvService) Loop() {
+func (service *RecvService) Loop() error {
 
 	for {
 		// len, remote, err := sock.ReadFromUDP(buf[:])
 		var buf [1 << 16]byte
 		len, remote, err := service.sock.ReadFromUDP(buf[:])
 		if err != nil {
-			panic(err)
+			// 	(err)
+			return err
 		}
 		service.processPacket(remote, buf[:len])
 	}
@@ -216,11 +247,12 @@ func (service *RecvService) loop() {
 	}
 
 }
-func (service *RecvService) rerequestPackets(transaction *RecvTransaction, req []int) {
+func (service *RecvService) rerequestPackets(transaction *RecvTransaction, req []int) error {
 	r1 := make([]byte, 16)
 	_, err := rand.Read(r1)
 	if err != nil {
-		panic(err)
+		// panic(err)
+		return err
 	}
 
 	data := append(transaction.Transaction, r1...)
@@ -234,7 +266,8 @@ func (service *RecvService) rerequestPackets(transaction *RecvTransaction, req [
 
 	block, err := aes.NewCipher([]byte(service.key))
 	if err != nil {
-		panic(err)
+		// panic(err)
+		return err
 	}
 
 	data1 := buffer.Bytes()
@@ -255,7 +288,8 @@ func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) {
 
 	block, err := aes.NewCipher([]byte(service.key))
 	if err != nil {
-		panic(err)
+		// panic(err)
+		return err
 	}
 
 	stream := cipher.NewCFBDecrypter(block, r1)
@@ -280,13 +314,17 @@ func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) {
 	fmt.Println("processPacker:", blck.id, hex.EncodeToString(r1))
 
 	if verified {
-		// os.MkdirAll("incomming/"+hex.EncodeToString(blck.transaction), 0700)
-		// f1, err := os.Create("incomming/" + hex.EncodeToString(blck.transaction) + "/" + fmt.Sprintf("%d.data", blck.id))
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// defer f1.Close()
-		// f1.Write(blck.fileData)
+		if service.disk {
+			os.MkdirAll(service.dir+hex.EncodeToString(blck.transaction), 0700)
+			f1, err := os.Create(service.dir + hex.EncodeToString(blck.transaction) + "/" + fmt.Sprintf("%d.data", blck.id))
+			if err != nil {
+				// panic(err)
+				return err
+			}
+			defer f1.Close()
+			f1.Write(blck.fileData)
+			blck.fileData = nil
+		}
 		service.ch <- blck
 	} else {
 		fmt.Println("wrong hash %#v %#v", blck.blockHash, blockHash[:])
