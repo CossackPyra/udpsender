@@ -38,14 +38,14 @@ type RecvTransaction struct {
 }
 
 type RecvBlock struct {
-	transaction      []byte
-	blockHash        []byte
-	fileHash         []byte
-	fileData         []byte
-	num, id          int32
-	start, end, size int64
-	time1            int64
-	addr             *net.UDPAddr
+	transaction             []byte
+	blockHash               []byte
+	fileHash                []byte
+	fileData                []byte
+	num, id                 int32
+	start, end, size, size1 int64
+	time1                   int64
+	addr                    *net.UDPAddr
 }
 
 type RecvHandleFunc func(service *RecvService, transaction *RecvTransaction)
@@ -74,7 +74,7 @@ func InitRecvTransaction(block *RecvBlock) *RecvTransaction {
 	transaction := new(RecvTransaction)
 	transaction.blocks = map[int]*RecvBlock{}
 	transaction.lastTime = time.Now().UnixNano()
-	transaction.blockSize = int64(len(block.fileData))
+	transaction.blockSize = block.size1
 	transaction.num = int(block.num)
 	transaction.Addr = block.addr
 	transaction.Transaction = block.transaction
@@ -310,7 +310,8 @@ func (service *RecvService) processPacket(addr *net.UDPAddr, buf []byte) error {
 	binary.Read(buffer, binary.LittleEndian, &blck.end)
 	binary.Read(buffer, binary.LittleEndian, &blck.size)
 	blck.blockHash = data2[52:72]
-	bufCopy := make([]byte, len(data2[72:]))
+	bllck.size1 = len(data2[72:])
+	bufCopy := make([]byte, bllck.size1)
 	copy(bufCopy[:], data2[72:])
 	blck.fileData = bufCopy
 	blockHash := sha1.Sum(blck.fileData)
