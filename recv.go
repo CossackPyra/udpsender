@@ -181,6 +181,7 @@ func (service *RecvService) Loop() error {
 			// 	(err)
 			return err
 		}
+		fmt.Print("+")
 		service.processPacket(remote, buf[:len])
 	}
 }
