@@ -248,6 +248,7 @@ func (service *RecvService) loop() {
 
 }
 func (service *RecvService) rerequestPackets(transaction *RecvTransaction, req []int) error {
+	fmt.Printf("rerequestPackets %#v\n", req)
 	r1 := make([]byte, 16)
 	_, err := rand.Read(r1)
 	if err != nil {
