@@ -260,7 +260,7 @@ func (service *RecvService) loop() {
 
 				if len(req) > 0 {
 					service.rerequestPackets(transaction, req)
-					stopTickerTill += time1 + int64(time.Second)
+					stopTickerTill = time1 + int64(time.Second)
 				}
 			}
 		}
