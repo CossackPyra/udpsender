@@ -27,6 +27,7 @@ type RecvService struct {
 }
 
 type RecvTransaction struct {
+	StartTime   int64
 	num         int
 	blocks      map[int]*RecvBlock
 	lastTime    int64
@@ -74,6 +75,7 @@ func InitRecvTransaction(block *RecvBlock) *RecvTransaction {
 	transaction := new(RecvTransaction)
 	transaction.blocks = map[int]*RecvBlock{}
 	transaction.lastTime = time.Now().UnixNano()
+	transaction.StartTime = transaction.lastTime
 	transaction.blockSize = block.size1
 	transaction.num = int(block.num)
 	transaction.Addr = block.addr
