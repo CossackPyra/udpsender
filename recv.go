@@ -239,8 +239,18 @@ func (service *RecvService) loop() {
 						}
 					}
 				}
+
+				rangespeed := transaction.Speed
+
+				if rangespeed < 100000 {
+					rangespeed = 100000
+				}
+				if rangespeed > 10000000 {
+					rangespeed = 10000000
+				}
+
 				// fmt.Printf(":%d %d#", len(req), shift)
-				fmt.Println("@", shift, last_block, dtime/int64(time.Millisecond), dtime, transaction.Speed, float64(transaction.blockSize))
+				fmt.Println("@", shift, last_block, dtime/int64(time.Millisecond), dtime, rangespeed, float64(transaction.blockSize))
 
 				if len(req) > 0 {
 					service.rerequestPackets(transaction, req)
