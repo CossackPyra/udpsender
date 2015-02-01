@@ -27,15 +27,16 @@ type RecvService struct {
 }
 
 type RecvTransaction struct {
-	StartTime   int64
-	num         int
-	blocks      map[int]*RecvBlock
-	lastTime    int64
-	blockSize   int64
-	Speed       float64
-	completed   bool
-	Addr        *net.UDPAddr
-	Transaction []byte
+	StartTime     int64
+	talkBackTime  int64
+	num           int
+	blocks        map[int]*RecvBlock
+	lastTime      int64
+	blockSize     int64
+	Speed, speed1 float64
+	completed     bool
+	Addr          *net.UDPAddr
+	Transaction   []byte
 }
 
 type RecvBlock struct {
@@ -76,6 +77,7 @@ func InitRecvTransaction(block *RecvBlock) *RecvTransaction {
 	transaction.blocks = map[int]*RecvBlock{}
 	transaction.lastTime = time.Now().UnixNano()
 	transaction.StartTime = transaction.lastTime
+	transaction.talkBackTime = transaction.lastTime + int64(time.Second)
 	transaction.blockSize = block.size1
 	transaction.num = int(block.num)
 	transaction.Addr = block.addr
@@ -190,7 +192,6 @@ func (service *RecvService) Loop() error {
 func (service *RecvService) loop() {
 
 	ticker := time.Tick(100 * time.Millisecond)
-	var stopTickerTill int64
 
 	for {
 
@@ -201,13 +202,21 @@ func (service *RecvService) loop() {
 			}
 		case <-ticker:
 			time1 := time.Now().UnixNano()
-			if stopTickerTill > time1 {
-				continue
-			}
+
 			for _, transaction := range service.transactions {
 				if transaction.completed {
 					continue
 				}
+
+				if time1 < transaction.talkBackTime {
+					continue
+				}
+
+				if transaction.Speed > transaction.speed1 {
+					continue
+				}
+
+				transaction.speed1 = transaction.Speed
 
 				fdtime := float64(time1 - transaction.lastTime)
 				transaction.lastTime = time1
@@ -262,7 +271,7 @@ func (service *RecvService) loop() {
 
 				if len(req) > 0 {
 					service.rerequestPackets(transaction, req)
-					stopTickerTill = time1 + int64(time.Second)
+					transaction.talkBackTime = time1 + int64(300*time.Millisecond)
 				}
 			}
 		}
