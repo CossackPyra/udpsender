@@ -237,7 +237,7 @@ func (service *RecvService) loop() {
 				// dtime  = Now - last_block.time
 				dtime := time1 - block.time1
 				// last_block + (dtime-100ms)*speed/blocksize
-				shift := last_block + int((float64(dtime)-100.0*float64(time.Millisecond))*transaction.Speed/float64(transaction.blockSize))
+				shift := last_block + int((float64(dtime)-100.0*float64(time.Millisecond))*rangespeed/float64(transaction.blockSize)/float64(time.Second))
 				// get first 100 un recieved blocks
 
 				req := []int{}
