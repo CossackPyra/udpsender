@@ -144,6 +144,15 @@ func (service *SendService) SendFile(key string, filename string) {
 		//go service.loop()
 		service.processPacket(buf[:n])
 
+		time2 := time.Now().UnixNano()
+		dt1 := time2 - time1
+		time1 = time2
+		dt2 := int64(time.Second) * service.blockSize / service.speed
+		dt3 := dt2 - dt1
+		if dt3 > 0 {
+			time.Sleep(time.Duration(dt3))
+		}
+
 	}
 
 }

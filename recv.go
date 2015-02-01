@@ -188,6 +188,8 @@ func (service *RecvService) Loop() error {
 func (service *RecvService) loop() {
 
 	ticker := time.Tick(100 * time.Millisecond)
+	var stopTickerTill int64
+
 	for {
 
 		select {
@@ -197,6 +199,9 @@ func (service *RecvService) loop() {
 			}
 		case <-ticker:
 			time1 := time.Now().UnixNano()
+			if stopTickerTill > time1 {
+				continue
+			}
 			for _, transaction := range service.transactions {
 				if transaction.completed {
 					continue
@@ -219,6 +224,16 @@ func (service *RecvService) loop() {
 				if last_block == -1 {
 					continue
 				}
+
+				rangespeed := transaction.Speed
+
+				if rangespeed < 100000 {
+					rangespeed = 100000
+				}
+				if rangespeed > 10000000 {
+					rangespeed = 10000000
+				}
+
 				// dtime  = Now - last_block.time
 				dtime := time1 - block.time1
 				// last_block + (dtime-100ms)*speed/blocksize
@@ -240,20 +255,12 @@ func (service *RecvService) loop() {
 					}
 				}
 
-				rangespeed := transaction.Speed
-
-				if rangespeed < 100000 {
-					rangespeed = 100000
-				}
-				if rangespeed > 10000000 {
-					rangespeed = 10000000
-				}
-
 				// fmt.Printf(":%d %d#", len(req), shift)
 				fmt.Println("@", shift, last_block, dtime/int64(time.Millisecond), dtime, rangespeed, float64(transaction.blockSize))
 
 				if len(req) > 0 {
 					service.rerequestPackets(transaction, req)
+					stopTickerTill += time1 + int64(time.Second)
 				}
 			}
 		}
